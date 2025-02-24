@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { PlusCircle } from "lucide-react";
+import { useState, useRef } from "react";
+import { PlusCircle, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -16,6 +16,7 @@ const Index = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [imageLinks, setImageLinks] = useState<ImageLink[]>([]);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAddLink = () => {
     if (!imageUrl || !linkUrl) {
@@ -42,6 +43,22 @@ const Index = () => {
 
   const handleImageClick = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const generateHtmlBlock = () => {
+    return imageLinks.map((link) => (
+      `<a href="${link.linkUrl}" style="text-decoration: none;">
+  <img src="${link.imageUrl}" alt="Link preview" style="max-width: 100%; height: auto; display: block; margin: 10px 0;">
+</a>`
+    )).join("\n");
+  };
+
+  const copyHtmlToClipboard = () => {
+    if (textAreaRef.current) {
+      textAreaRef.current.select();
+      navigator.clipboard.writeText(textAreaRef.current.value);
+      toast.success("HTML copied to clipboard!");
+    }
   };
 
   return (
@@ -79,6 +96,26 @@ const Index = () => {
             </Button>
           </div>
         </Card>
+
+        {imageLinks.length > 0 && (
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-medium">Generated HTML</h2>
+                <Button onClick={copyHtmlToClipboard} variant="outline" size="sm">
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy HTML
+                </Button>
+              </div>
+              <textarea
+                ref={textAreaRef}
+                className="w-full h-40 p-4 font-mono text-sm bg-gray-50 border rounded-md"
+                value={generateHtmlBlock()}
+                readOnly
+              />
+            </div>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {imageLinks.map((link) => (
