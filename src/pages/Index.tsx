@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { PlusCircle, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,11 +45,36 @@ const Index = () => {
   };
 
   const generateHtmlBlock = () => {
-    return imageLinks.map((link) => (
-      `<a href="${link.linkUrl}" style="text-decoration: none;">
-  <img src="${link.imageUrl}" alt="Link preview" style="max-width: 100%; height: auto; display: block; margin: 10px 0;">
-</a>`
-    )).join("\n");
+    let html = '<div style="width: 100%; display: table; border-collapse: collapse;">\n';
+    
+    // Process images in pairs
+    for (let i = 0; i < imageLinks.length; i += 2) {
+      html += '  <div style="display: table-row;">\n';
+      
+      // First image in the pair
+      html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+      html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+      html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+      html += '      </a>\n';
+      html += '    </div>\n';
+      
+      // Second image in the pair (if exists)
+      if (i + 1 < imageLinks.length) {
+        html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+        html += `      <a href="${imageLinks[i + 1].linkUrl}" style="text-decoration: none;">\n`;
+        html += `        <img src="${imageLinks[i + 1].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+        html += '      </a>\n';
+        html += '    </div>\n';
+      } else {
+        // Empty cell for odd number of images
+        html += '    <div style="display: table-cell; width: 50%; padding: 10px;"></div>\n';
+      }
+      
+      html += '  </div>\n';
+    }
+    
+    html += '</div>';
+    return html;
   };
 
   const copyHtmlToClipboard = () => {
@@ -117,7 +141,7 @@ const Index = () => {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {imageLinks.map((link) => (
             <Card
               key={link.id}
