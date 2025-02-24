@@ -49,7 +49,7 @@ const Index = () => {
     
     // Process images in pairs
     for (let i = 0; i < imageLinks.length; i += 2) {
-      html += '  <div style="display: table-row;">\n';
+      html += '  <div style="display: table-row; margin: 0 10px;">\n';
       
       // First image in the pair
       html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
