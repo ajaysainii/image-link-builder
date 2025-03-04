@@ -51,52 +51,74 @@ const Index = () => {
   };
 
   const generateHtmlBlock = () => {
-    let html = '<div style="width: 100%; display: table; border-collapse: collapse;">\n';
+    let htmlBlocks = [];
     
     // Process images with individual full width settings
     let i = 0;
     while (i < imageLinks.length) {
       if (imageLinks[i].isFullWidth) {
-        // Full width image
-        html += '  <div style="display: table-row; margin: 0 10px;">\n';
-        html += '    <div style="display: table-cell; width: 100%; padding: 10px;">\n';
-        html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
-        html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
-        html += '      </a>\n';
-        html += '    </div>\n';
-        html += '  </div>\n';
+        // Full width image - create a standalone container for it
+        let fullWidthHtml = '<div style="width: 100%; display: table; border-collapse: collapse; margin-bottom: 20px;">\n';
+        fullWidthHtml += '  <div style="display: table-row; margin: 0 10px;">\n';
+        fullWidthHtml += '    <div style="display: table-cell; width: 100%; padding: 10px;">\n';
+        fullWidthHtml += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+        fullWidthHtml += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+        fullWidthHtml += '      </a>\n';
+        fullWidthHtml += '    </div>\n';
+        fullWidthHtml += '  </div>\n';
+        fullWidthHtml += '</div>';
+        
+        htmlBlocks.push(fullWidthHtml);
         i++;
-      } else {
-        // Regular pair of images
-        html += '  <div style="display: table-row; margin: 0 10px;">\n';
+      } else if (i + 1 < imageLinks.length && !imageLinks[i + 1].isFullWidth) {
+        // Two column layout - create a container for the pair
+        let twoColumnHtml = '<div style="width: 100%; display: table; border-collapse: collapse; margin-bottom: 20px;">\n';
+        twoColumnHtml += '  <div style="display: table-row; margin: 0 10px;">\n';
         
         // First image in the pair
-        html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
-        html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
-        html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
-        html += '      </a>\n';
-        html += '    </div>\n';
+        twoColumnHtml += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+        twoColumnHtml += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+        twoColumnHtml += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+        twoColumnHtml += '      </a>\n';
+        twoColumnHtml += '    </div>\n';
         
-        // Second image in the pair (if exists and is not full width)
-        if (i + 1 < imageLinks.length && !imageLinks[i + 1].isFullWidth) {
-          html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
-          html += `      <a href="${imageLinks[i + 1].linkUrl}" style="text-decoration: none;">\n`;
-          html += `        <img src="${imageLinks[i + 1].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
-          html += '      </a>\n';
-          html += '    </div>\n';
-          i += 2;
-        } else {
-          // Empty cell for odd number of images or if next image is full width
-          html += '    <div style="display: table-cell; width: 50%; padding: 10px;"></div>\n';
-          i++;
-        }
+        // Second image in the pair
+        twoColumnHtml += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+        twoColumnHtml += `      <a href="${imageLinks[i + 1].linkUrl}" style="text-decoration: none;">\n`;
+        twoColumnHtml += `        <img src="${imageLinks[i + 1].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+        twoColumnHtml += '      </a>\n';
+        twoColumnHtml += '    </div>\n';
         
-        html += '  </div>\n';
+        twoColumnHtml += '  </div>\n';
+        twoColumnHtml += '</div>';
+        
+        htmlBlocks.push(twoColumnHtml);
+        i += 2;
+      } else {
+        // Single image in non-full width - create a separate container with empty second cell
+        let singleColumnHtml = '<div style="width: 100%; display: table; border-collapse: collapse; margin-bottom: 20px;">\n';
+        singleColumnHtml += '  <div style="display: table-row; margin: 0 10px;">\n';
+        
+        // Single image
+        singleColumnHtml += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+        singleColumnHtml += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+        singleColumnHtml += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+        singleColumnHtml += '      </a>\n';
+        singleColumnHtml += '    </div>\n';
+        
+        // Empty cell
+        singleColumnHtml += '    <div style="display: table-cell; width: 50%; padding: 10px;"></div>\n';
+        
+        singleColumnHtml += '  </div>\n';
+        singleColumnHtml += '</div>';
+        
+        htmlBlocks.push(singleColumnHtml);
+        i++;
       }
     }
     
-    html += '</div>';
-    return html;
+    // Join all HTML blocks with newlines
+    return htmlBlocks.join('\n');
   };
 
   const copyHtmlToClipboard = () => {
