@@ -11,11 +11,13 @@ interface ImageLink {
   id: string;
   imageUrl: string;
   linkUrl: string;
+  isFullWidth: boolean;
 }
 
 const Index = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  const [isFullWidth, setIsFullWidth] = useState(false);
   const [imageLinks, setImageLinks] = useState<ImageLink[]>([]);
   const [singleImagePerRow, setSingleImagePerRow] = useState(false);
   const [firstImageFullWidth, setFirstImageFullWidth] = useState(false);
@@ -31,11 +33,13 @@ const Index = () => {
       id: crypto.randomUUID(),
       imageUrl,
       linkUrl,
+      isFullWidth
     };
 
     setImageLinks((prev) => [...prev, newImageLink]);
     setImageUrl("");
     setLinkUrl("");
+    setIsFullWidth(false);
     toast.success("Link added successfully");
   };
 
@@ -87,7 +91,7 @@ const Index = () => {
         html += '  </div>\n';
       }
     } else if (singleImagePerRow) {
-      // Process one image per row (existing behavior)
+      // Process one image per row
       for (let i = 0; i < imageLinks.length; i++) {
         html += '  <div style="display: table-row; margin: 0 10px;">\n';
         html += '    <div style="display: table-cell; width: 100%; padding: 10px;">\n';
@@ -98,30 +102,46 @@ const Index = () => {
         html += '  </div>\n';
       }
     } else {
-      // Process images in pairs (original behavior)
-      for (let i = 0; i < imageLinks.length; i += 2) {
-        html += '  <div style="display: table-row; margin: 0 10px;">\n';
-        
-        // First image in the pair
-        html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
-        html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
-        html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
-        html += '      </a>\n';
-        html += '    </div>\n';
-        
-        // Second image in the pair (if exists)
-        if (i + 1 < imageLinks.length) {
-          html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
-          html += `      <a href="${imageLinks[i + 1].linkUrl}" style="text-decoration: none;">\n`;
-          html += `        <img src="${imageLinks[i + 1].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+      // Process images with individual full width settings
+      let i = 0;
+      while (i < imageLinks.length) {
+        if (imageLinks[i].isFullWidth) {
+          // Full width image
+          html += '  <div style="display: table-row; margin: 0 10px;">\n';
+          html += '    <div style="display: table-cell; width: 100%; padding: 10px;">\n';
+          html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+          html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
           html += '      </a>\n';
           html += '    </div>\n';
+          html += '  </div>\n';
+          i++;
         } else {
-          // Empty cell for odd number of images
-          html += '    <div style="display: table-cell; width: 50%; padding: 10px;"></div>\n';
+          // Regular pair of images
+          html += '  <div style="display: table-row; margin: 0 10px;">\n';
+          
+          // First image in the pair
+          html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+          html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+          html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+          html += '      </a>\n';
+          html += '    </div>\n';
+          
+          // Second image in the pair (if exists and is not full width)
+          if (i + 1 < imageLinks.length && !imageLinks[i + 1].isFullWidth) {
+            html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+            html += `      <a href="${imageLinks[i + 1].linkUrl}" style="text-decoration: none;">\n`;
+            html += `        <img src="${imageLinks[i + 1].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+            html += '      </a>\n';
+            html += '    </div>\n';
+            i += 2;
+          } else {
+            // Empty cell for odd number of images or if next image is full width
+            html += '    <div style="display: table-cell; width: 50%; padding: 10px;"></div>\n';
+            i++;
+          }
+          
+          html += '  </div>\n';
         }
-        
-        html += '  </div>\n';
       }
     }
     
@@ -166,10 +186,25 @@ const Index = () => {
                 onChange={(e) => setLinkUrl(e.target.value)}
               />
             </div>
-            <Button onClick={handleAddLink} className="h-10">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Link
-            </Button>
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="full-width-image"
+                  checked={isFullWidth}
+                  onCheckedChange={setIsFullWidth}
+                />
+                <label
+                  htmlFor="full-width-image"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Full width image
+                </label>
+              </div>
+              <Button onClick={handleAddLink} className="h-10">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Link
+              </Button>
+            </div>
           </div>
         </Card>
 
@@ -253,6 +288,11 @@ const Index = () => {
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <span className="text-white text-sm">Click to visit</span>
                     </div>
+                    {link.isFullWidth && (
+                      <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        Full width
+                      </div>
+                    )}
                   </div>
                   <div className="p-4 space-y-2">
                     <div className="flex items-center justify-between">
