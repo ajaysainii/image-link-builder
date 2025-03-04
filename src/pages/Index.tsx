@@ -1,9 +1,11 @@
+
 import { useState, useRef } from "react";
 import { PlusCircle, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 
 interface ImageLink {
   id: string;
@@ -15,6 +17,7 @@ const Index = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [imageLinks, setImageLinks] = useState<ImageLink[]>([]);
+  const [singleImagePerRow, setSingleImagePerRow] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAddLink = () => {
@@ -47,30 +50,43 @@ const Index = () => {
   const generateHtmlBlock = () => {
     let html = '<div style="width: 100%; display: table; border-collapse: collapse;">\n';
     
-    // Process images in pairs
-    for (let i = 0; i < imageLinks.length; i += 2) {
-      html += '  <div style="display: table-row; margin: 0 10px;">\n';
-      
-      // First image in the pair
-      html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
-      html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
-      html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
-      html += '      </a>\n';
-      html += '    </div>\n';
-      
-      // Second image in the pair (if exists)
-      if (i + 1 < imageLinks.length) {
-        html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
-        html += `      <a href="${imageLinks[i + 1].linkUrl}" style="text-decoration: none;">\n`;
-        html += `        <img src="${imageLinks[i + 1].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+    if (singleImagePerRow) {
+      // Process one image per row
+      for (let i = 0; i < imageLinks.length; i++) {
+        html += '  <div style="display: table-row; margin: 0 10px;">\n';
+        html += '    <div style="display: table-cell; width: 100%; padding: 10px;">\n';
+        html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+        html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
         html += '      </a>\n';
         html += '    </div>\n';
-      } else {
-        // Empty cell for odd number of images
-        html += '    <div style="display: table-cell; width: 50%; padding: 10px;"></div>\n';
+        html += '  </div>\n';
       }
-      
-      html += '  </div>\n';
+    } else {
+      // Process images in pairs (original behavior)
+      for (let i = 0; i < imageLinks.length; i += 2) {
+        html += '  <div style="display: table-row; margin: 0 10px;">\n';
+        
+        // First image in the pair
+        html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+        html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+        html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+        html += '      </a>\n';
+        html += '    </div>\n';
+        
+        // Second image in the pair (if exists)
+        if (i + 1 < imageLinks.length) {
+          html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+          html += `      <a href="${imageLinks[i + 1].linkUrl}" style="text-decoration: none;">\n`;
+          html += `        <img src="${imageLinks[i + 1].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+          html += '      </a>\n';
+          html += '    </div>\n';
+        } else {
+          // Empty cell for odd number of images
+          html += '    <div style="display: table-cell; width: 50%; padding: 10px;"></div>\n';
+        }
+        
+        html += '  </div>\n';
+      }
     }
     
     html += '</div>';
@@ -122,68 +138,85 @@ const Index = () => {
         </Card>
 
         {imageLinks.length > 0 && (
-          <Card className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium">Generated HTML</h2>
-                <Button onClick={copyHtmlToClipboard} variant="outline" size="sm">
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy HTML
-                </Button>
-              </div>
-              <textarea
-                ref={textAreaRef}
-                className="w-full h-40 p-4 font-mono text-sm bg-gray-50 border rounded-md"
-                value={generateHtmlBlock()}
-                readOnly
-              />
-            </div>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {imageLinks.map((link) => (
-            <Card
-              key={link.id}
-              className="group relative overflow-hidden transition-all duration-300 hover:shadow-md"
-            >
-              <div
-                className="cursor-pointer aspect-video bg-gray-100 relative"
-                onClick={() => handleImageClick(link.linkUrl)}
-              >
-                <img
-                  src={link.imageUrl}
-                  alt="Link preview"
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <span className="text-white text-sm">Click to visit</span>
+          <>
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="single-image-mode"
+                    checked={singleImagePerRow}
+                    onCheckedChange={setSingleImagePerRow}
+                  />
+                  <label
+                    htmlFor="single-image-mode"
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    Single image per row
+                  </label>
                 </div>
               </div>
-              <div className="p-4 space-y-2">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <a
-                    href={link.linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-gray-600 truncate hover:text-gray-900 transition-colors"
-                  >
-                    {link.linkUrl}
-                  </a>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveLink(link.id)}
-                    className="text-gray-500 hover:text-red-500"
-                  >
-                    Remove
+                  <h2 className="text-lg font-medium">Generated HTML</h2>
+                  <Button onClick={copyHtmlToClipboard} variant="outline" size="sm">
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy HTML
                   </Button>
                 </div>
+                <textarea
+                  ref={textAreaRef}
+                  className="w-full h-40 p-4 font-mono text-sm bg-gray-50 border rounded-md"
+                  value={generateHtmlBlock()}
+                  readOnly
+                />
               </div>
             </Card>
-          ))}
-        </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {imageLinks.map((link) => (
+                <Card
+                  key={link.id}
+                  className="group relative overflow-hidden transition-all duration-300 hover:shadow-md"
+                >
+                  <div
+                    className="cursor-pointer aspect-video bg-gray-100 relative"
+                    onClick={() => handleImageClick(link.linkUrl)}
+                  >
+                    <img
+                      src={link.imageUrl}
+                      alt="Link preview"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <span className="text-white text-sm">Click to visit</span>
+                    </div>
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <a
+                        href={link.linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-gray-600 truncate hover:text-gray-900 transition-colors"
+                      >
+                        {link.linkUrl}
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveLink(link.id)}
+                        className="text-gray-500 hover:text-red-500"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
 
         {imageLinks.length === 0 && (
           <div className="text-center py-12 text-gray-500">
