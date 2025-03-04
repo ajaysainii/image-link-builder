@@ -18,6 +18,7 @@ const Index = () => {
   const [linkUrl, setLinkUrl] = useState("");
   const [imageLinks, setImageLinks] = useState<ImageLink[]>([]);
   const [singleImagePerRow, setSingleImagePerRow] = useState(false);
+  const [firstImageFullWidth, setFirstImageFullWidth] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAddLink = () => {
@@ -50,8 +51,43 @@ const Index = () => {
   const generateHtmlBlock = () => {
     let html = '<div style="width: 100%; display: table; border-collapse: collapse;">\n';
     
-    if (singleImagePerRow) {
-      // Process one image per row
+    if (firstImageFullWidth && imageLinks.length > 0) {
+      // First image takes full width
+      html += '  <div style="display: table-row; margin: 0 10px;">\n';
+      html += '    <div style="display: table-cell; width: 100%; padding: 10px;">\n';
+      html += `      <a href="${imageLinks[0].linkUrl}" style="text-decoration: none;">\n`;
+      html += `        <img src="${imageLinks[0].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+      html += '      </a>\n';
+      html += '    </div>\n';
+      html += '  </div>\n';
+      
+      // Process the remaining images in pairs
+      for (let i = 1; i < imageLinks.length; i += 2) {
+        html += '  <div style="display: table-row; margin: 0 10px;">\n';
+        
+        // First image in the pair
+        html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+        html += `      <a href="${imageLinks[i].linkUrl}" style="text-decoration: none;">\n`;
+        html += `        <img src="${imageLinks[i].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+        html += '      </a>\n';
+        html += '    </div>\n';
+        
+        // Second image in the pair (if exists)
+        if (i + 1 < imageLinks.length) {
+          html += '    <div style="display: table-cell; width: 50%; padding: 10px;">\n';
+          html += `      <a href="${imageLinks[i + 1].linkUrl}" style="text-decoration: none;">\n`;
+          html += `        <img src="${imageLinks[i + 1].imageUrl}" alt="Link preview" style="width: 100%; height: auto; display: block;">\n`;
+          html += '      </a>\n';
+          html += '    </div>\n';
+        } else {
+          // Empty cell for odd number of images
+          html += '    <div style="display: table-cell; width: 50%; padding: 10px;"></div>\n';
+        }
+        
+        html += '  </div>\n';
+      }
+    } else if (singleImagePerRow) {
+      // Process one image per row (existing behavior)
       for (let i = 0; i < imageLinks.length; i++) {
         html += '  <div style="display: table-row; margin: 0 10px;">\n';
         html += '    <div style="display: table-cell; width: 100%; padding: 10px;">\n';
@@ -141,18 +177,44 @@ const Index = () => {
           <>
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="single-image-mode"
-                    checked={singleImagePerRow}
-                    onCheckedChange={setSingleImagePerRow}
-                  />
-                  <label
-                    htmlFor="single-image-mode"
-                    className="text-sm font-medium cursor-pointer"
-                  >
-                    Single image per row
-                  </label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="single-image-mode"
+                      checked={singleImagePerRow}
+                      onCheckedChange={(checked) => {
+                        setSingleImagePerRow(checked);
+                        if (checked) {
+                          setFirstImageFullWidth(false);
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="single-image-mode"
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      Single image per row
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="first-image-full-width"
+                      checked={firstImageFullWidth}
+                      onCheckedChange={(checked) => {
+                        setFirstImageFullWidth(checked);
+                        if (checked) {
+                          setSingleImagePerRow(false);
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="first-image-full-width"
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      First image full width
+                    </label>
+                  </div>
                 </div>
               </div>
               <div className="space-y-4">
