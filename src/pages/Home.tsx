@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Button as ButtonIcon } from "lucide-react";
+import { ImageIcon, MousePointer } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ const Home = () => {
           >
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="p-4 bg-primary/10 rounded-full">
-                <ButtonIcon className="h-10 w-10 text-primary" />
+                <MousePointer className="h-10 w-10 text-primary" />
               </div>
               <h2 className="text-2xl font-medium">Button Builder</h2>
               <p className="text-gray-500">
