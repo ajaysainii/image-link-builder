@@ -1,12 +1,15 @@
 
 import { useState, useRef, ChangeEvent } from "react";
-import { PlusCircle, Copy, ArrowLeft, Trash2 } from "lucide-react";
+import { PlusCircle, Copy, ArrowLeft, Trash2, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface ButtonLink {
   id: string;
@@ -15,6 +18,9 @@ interface ButtonLink {
   buttonText: string;
   width: number;
   height: number;
+  borderRadius: number;
+  padding: number;
+  alignment: "left" | "center" | "right";
 }
 
 const ButtonBuilder = () => {
@@ -24,6 +30,9 @@ const ButtonBuilder = () => {
   const [buttonText, setButtonText] = useState("");
   const [width, setWidth] = useState(200);
   const [height, setHeight] = useState(60);
+  const [borderRadius, setBorderRadius] = useState(5);
+  const [padding, setPadding] = useState(0);
+  const [alignment, setAlignment] = useState<"left" | "center" | "right">("center");
   const [buttonLinks, setButtonLinks] = useState<ButtonLink[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -56,7 +65,10 @@ const ButtonBuilder = () => {
       linkUrl,
       buttonText,
       width,
-      height
+      height,
+      borderRadius,
+      padding,
+      alignment
     };
 
     setButtonLinks((prev) => [...prev, newButtonLink]);
@@ -71,9 +83,13 @@ const ButtonBuilder = () => {
   
   const generateHtmlBlock = () => {
     return buttonLinks.map(button => {
-      return `<a href="${button.linkUrl}" style="display: inline-block; width: ${button.width}px; height: ${button.height}px; background-image: url('${button.imageUrl}'); background-size: cover; background-position: center; text-align: center; line-height: ${button.height}px; color: white; font-weight: bold; text-decoration: none; margin: 10px; border-radius: 5px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">
-  ${button.buttonText}
-</a>`;
+      const containerStyle = `text-align: ${button.alignment};`;
+      
+      return `<div style="${containerStyle}">
+  <a href="${button.linkUrl}" style="display: inline-block; width: ${button.width}px; height: ${button.height}px; background-image: url('${button.imageUrl}'); background-size: cover; background-position: center; text-align: center; line-height: ${button.height - (button.padding * 2)}px; color: white; font-weight: bold; text-decoration: none; margin: 10px; border-radius: ${button.borderRadius}px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); padding: ${button.padding}px;">
+    ${button.buttonText}
+  </a>
+</div>`;
     }).join('\n\n');
   };
 
@@ -177,6 +193,66 @@ const ButtonBuilder = () => {
                 />
               </div>
             </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Border Radius (px)</label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[borderRadius]}
+                    min={0}
+                    max={30}
+                    step={1}
+                    onValueChange={(value) => setBorderRadius(value[0])}
+                    className="flex-1"
+                  />
+                  <span className="w-8 text-center">{borderRadius}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Padding (px)</label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[padding]}
+                    min={0}
+                    max={20}
+                    step={1}
+                    onValueChange={(value) => setPadding(value[0])}
+                    className="flex-1"
+                  />
+                  <span className="w-8 text-center">{padding}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Alignment</label>
+                <RadioGroup 
+                  value={alignment} 
+                  onValueChange={(value: "left" | "center" | "right") => setAlignment(value)}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="left" id="align-left" />
+                    <Label htmlFor="align-left" className="flex items-center">
+                      <AlignLeft className="h-4 w-4 mr-1" /> Left
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="center" id="align-center" />
+                    <Label htmlFor="align-center" className="flex items-center">
+                      <AlignCenter className="h-4 w-4 mr-1" /> Center
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="right" id="align-right" />
+                    <Label htmlFor="align-right" className="flex items-center">
+                      <AlignRight className="h-4 w-4 mr-1" /> Right
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
             
             <div className="flex justify-center mt-2">
               <Button onClick={handleAddButton} className="h-10">
@@ -190,7 +266,7 @@ const ButtonBuilder = () => {
         {imageUrl && (
           <div className="mt-6">
             <h3 className="text-lg font-medium mb-2">Preview</h3>
-            <div className="p-4 border rounded-md bg-gray-50">
+            <div className={`p-4 border rounded-md bg-gray-50 text-${alignment}`}>
               <div 
                 style={{
                   width: `${width}px`,
@@ -198,13 +274,14 @@ const ButtonBuilder = () => {
                   backgroundImage: `url(${imageUrl})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  lineHeight: `${height - (padding * 2)}px`,
                   color: 'white',
                   textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
                   fontWeight: 'bold',
-                  borderRadius: '5px'
+                  borderRadius: `${borderRadius}px`,
+                  padding: `${padding}px`,
                 }}
               >
                 {buttonText || "Button Text"}
@@ -240,7 +317,7 @@ const ButtonBuilder = () => {
                   className="overflow-hidden transition-all duration-300 hover:shadow-md"
                 >
                   <div className="p-4">
-                    <div className="mb-4 flex justify-center">
+                    <div className={`mb-4 text-${button.alignment}`}>
                       <div 
                         style={{
                           width: `${button.width}px`,
@@ -248,14 +325,14 @@ const ButtonBuilder = () => {
                           backgroundImage: `url(${button.imageUrl})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          display: 'inline-block',
+                          textAlign: 'center',
+                          lineHeight: `${button.height - (button.padding * 2)}px`,
                           color: 'white',
                           textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
                           fontWeight: 'bold',
-                          borderRadius: '5px',
-                          margin: '0 auto'
+                          borderRadius: `${button.borderRadius}px`,
+                          padding: `${button.padding}px`,
                         }}
                       >
                         {button.buttonText}
